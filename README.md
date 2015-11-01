@@ -1,1 +1,1 @@
-# Conference-Organization-Application
+# Conference Organization Application
