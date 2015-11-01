@@ -10,6 +10,12 @@ handlers:       # static then dynamic
   static_files: favicon.ico
   upload: favicon\.ico
 
+- url: /crons/check_featured_speaker
+  script: main.app
+
+- url: /tasks/check_featured_speaker
+  script: main.app
+
 - url: /js
   static_dir: static/js
 
@@ -30,20 +36,24 @@ handlers:       # static then dynamic
   upload: templates/index\.html
   secure: always
 
-- url: /tasks/send_confirmation_email
-  script: main.app
-
-- url: /crons/set_announcement
-  script: main.app
-
 - url: /_ah/spi/.*
   script: conference.api
   secure: always
 
-libraries:
+- url: /crons/set_announcement
+  script: main.app
+  login: admin
 
-- name: webapp2
-  version: latest
+- url: /tasks/send_confirmation_email
+  script: main.app
+  login: admin
+
+- url: /tasks/send_confirmation_session_email
+  script: main.app
+  login: admin
+
+
+libraries:
 
 - name: endpoints
   version: latest
