@@ -13,12 +13,15 @@ import endpoints
 from protorpc import messages
 from google.appengine.ext import ndb
 
+#-----------------------------Profile----------------------------------
+
 class Profile(ndb.Model):
     """Profile -- User profile object"""
     displayName = ndb.StringProperty()
     mainEmail = ndb.StringProperty()
     teeShirtSize = ndb.StringProperty(default='NOT_SPECIFIED')
     conferenceKeysToAttend = ndb.StringProperty(repeated=True)
+    sessionKeysInWishlist = ndb.StringProperty(repeated=True)
 
 class ProfileMiniForm(messages.Message):
     """ProfileMiniForm -- update Profile form message"""
@@ -32,7 +35,13 @@ class ProfileForm(messages.Message):
     mainEmail = messages.StringField(2)
     teeShirtSize = messages.EnumField('TeeShirtSize', 3)
     conferenceKeysToAttend = messages.StringField(4, repeated=True)
+    sessionKeysInWishlist = messages.StringField(5, repeated=True)
 
+class ProfileForms(messages.Message):
+    """ProfileForms -- multiple Profile outbound form message"""
+    items = messages.MessageField(ProfileForm, 1, repeated=True)
+
+#-------------------------------Conference---------------------------
 class Conference(ndb.Model):
     """Conference -- Conference object"""
     name            = ndb.StringProperty(required=True)
@@ -104,6 +113,8 @@ class TeeShirtSize(messages.Enum):
     XXL_W = 13
     XXXL_M = 14
     XXXL_W = 15
+
+#--------------------------------Session-------------------------------
 
 class Session(ndb.Model):
     """Session -- Session object"""
