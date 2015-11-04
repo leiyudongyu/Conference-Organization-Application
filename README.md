@@ -111,7 +111,7 @@ p = p.filter(Session.typeOfSession != 'workshop')
 p = p.order(Session.typeOfSession)
 p = p.order(Session.date)
 p = p.order(Session.startTime)
-result = [session for session in p if sess.startTime < time(19)]
+result = [session for session in p if session.startTime < time(19)]
 ```
 
 ## Task 4: Add a Task
