@@ -36,7 +36,6 @@ from google.appengine.api import taskqueue
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 MEMCACHE_ANNOUNCEMENTS_KEY = "RECENT_ANNOUNCEMENTS"
-MEMCACHE_FEATURED_SPEAKER_KEY = "FEATURED_SPEAKER"
 
 DEFAULTS = {
     "city": "Default City",
@@ -527,6 +526,11 @@ class ConferenceApi(remote.Service):
             'conferenceInfo': repr(request)},
             url='/tasks/send_confirmation_session_email'
         )
+        speaker = data['speaker']
+        taskqueue.add(
+            url='/tasks/check_featured_speaker',
+            params={'speaker': speaker, 'websafeConferenceKey': wsck}
+        )
         return request
 
     @endpoints.method(SessionForm, SessionForm,
@@ -568,7 +572,7 @@ class ConferenceApi(remote.Service):
         sessions = Session.query()
         Sessions = sessions.filter(Session.websafeConferenceKey == wsck)
         # return set of SessionForm objects per conference
-        return SessionForms(items=[self._copySessionToForm(session) for session in sessions])
+        return SessionForms(items=[self._copySessionToForm(session) for session in Sessions])
 
     @endpoints.method(SESSION_GET_REQUEST, SessionForms,
             path='conference/{websafeConferenceKey}/sessions/{typeOfSession}',
@@ -676,16 +680,19 @@ class ConferenceApi(remote.Service):
         # return set of SessionForm objects per conference
         return SessionForms(items=[self._copySessionToForm(session) for session in sessions])
 
-    @endpoints.method(message_types.VoidMessage, StringMessage,
+    @endpoints.method(CONF_GET_REQUEST, StringMessage,
                       path='speaker/get_features',
                       http_method='GET', name='getFeaturedSpeaker')
     def getFeaturedSpeaker(self, request):
-        """Get all featured speakers and return json data"""
-        featuredSpeaker = memcache.get(MEMCACHE_FEATURED_SPEAKER_KEY)
-        if not featuredSpeaker:
-            featuredSpeaker = ""
-        # return json data
-        return StringMessage(data=json.dumps(featuredSpeaker))
+        """Get the name of the currently featured speaker for a conference"""
+        wsck = request.websafeConferenceKey
+        # get Conference object from request; bail if not found
+        c_key = ndb.Key(urlsafe=wsck)
+        if not c_key.get():
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % wsck)
+        # Return memcache string for a particular conference
+        return StringMessage(data=memcache.get('featuredSpeaker_' + wsck) or "")
 
 
     @endpoints.method(message_types.VoidMessage,BooleanMessage, 
@@ -703,24 +710,19 @@ class ConferenceApi(remote.Service):
         return  BooleanMessage(data=True)
 
     @staticmethod
-    def _cacheFeaturedSpeaker():
+    def _cacheFeaturedSpeaker(wsck, speaker):
         """Get Featured Speaker & assign to memcache;"""
-        sessions = Session.query()
-        speakersCounter = {}
-        featured_speaker = ""
-        num = 0
-        for session in sessions:
-            if session.speaker:
-                if session.speaker not in speakersCounter:
-                    speakersCounter[session.speaker] = 1
-                else:
-                    speakersCounter[session.speaker] += 1
-                if speakersCounter[session.speaker] > num:
-                    featured_speaker = session.speaker
-                    num = speakersCounter[session.speaker] 
-        memcache.set(MEMCACHE_FEATURED_SPEAKER_KEY, featured_speaker)
-        return featured_speaker
-
+        # get Conference object from request; bail if not found
+        c_key = ndb.Key(urlsafe=wsck)
+        if not c_key.get():
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % wsck)
+        # Get sessions for conference and particular speaker and return list
+        s_query = Session.query(ancestor=c_key)
+        s_query = s_query.filter(Session.speaker == speaker)
+        s_query = s_query.order(Session.date)
+        s_query = s_query.order(Session.startTime)
+        return s_query
 
 # TODO
 

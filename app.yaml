@@ -10,9 +10,6 @@ handlers:       # static then dynamic
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /crons/check_featured_speaker
-  script: main.app
-
 - url: /tasks/check_featured_speaker
   script: main.app
 

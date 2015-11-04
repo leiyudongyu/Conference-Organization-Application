@@ -5,6 +5,7 @@ from google.appengine.api import mail
 from conference import ConferenceApi
 from google.appengine.api import app_identity
 from google.appengine.api import mail
+from google.appengine.api import memcache
 
 class SetAnnouncementHandler(webapp2.RequestHandler):
     def get(self):
@@ -39,13 +40,17 @@ class SendConfirmationOfSessionEmailHandler(webapp2.RequestHandler):
         )
 
 class CheckFeaturedSpeakerHandler(webapp2.RequestHandler):
-    def get(self):
-        """Set FeaturedSpeaker in Memcache."""
-        ConferenceApi._cacheFeaturedSpeaker()
+    def post(self):
+        wsck = self.request.get('websafeConferenceKey')
+        speaker = self.request.get('speaker')
+        # Set new featured speaker in memcache if necessary
+        sessions = ConferenceApi._cacheFeaturedSpeaker(wsck, speaker)
+        if sessions.count() >= 2:
+            memcache.set(key="featuredSpeaker_" + wsck, value=speaker)
 
 app = webapp2.WSGIApplication([
     ('/crons/set_announcement', SetAnnouncementHandler),
     ('/tasks/send_confirmation_email', SendConfirmationEmailHandler),
     ('/tasks/send_confirmation_session_email', SendConfirmationOfSessionEmailHandler),
-    ('/crons/check_featured_speaker', CheckFeaturedSpeakerHandler)
+    ('/tasks/check_featured_speaker', CheckFeaturedSpeakerHandler)
 ], debug=True)
