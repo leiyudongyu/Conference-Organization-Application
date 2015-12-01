@@ -1,5 +1,5 @@
 # Conference Organization APP using Google App Engine
-This is the fourth project for "Full Stack Web Developer Nanodegree" on Udacity.
+
 
 In this project, I developed the cloud-based APIs to support a provided conference organization application that exists on the web as well as can be put on Android and IOS application. Google Cloud Endpoints with Python is used to realize the API backend on Google APP Engine. 
 
