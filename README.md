@@ -41,7 +41,7 @@ The APIs are:
 ![image](https://raw.githubusercontent.com/leiyudongyu/images/master/42.jpg)
 
 
-## Task 1: Add Sessions to a Conference
+## Add Sessions to a Conference
 1. Session class 
 	- Inherit `ndb.Model`.
 	- Sessions are children of Conferences(In __init__py, I set session's key point to conference key, you can see the code of _createSessionObject() in __init__py)
@@ -85,7 +85,7 @@ The APIs are:
 	- `getSessionsBySpeaker(speaker)` -- Given a speaker, return all sessions given by this particular speaker, across all conferences
 	- `createSession(SessionForm, websafeConferenceKey)` -- Open only to the organizer of the conference
 
-## Task 2: Add Sessions to User Wishlist
+## Add Sessions to User Wishlist
 1. Profile class
 	-  Added a new attribute `sessionKeysInWishlist = ndb.StringProperty(repeated=True)` into Profile class.
 	-  In `sessionKeysInWishlist`, the `urlsafe` of the sessions which the user is interested in are stored.
@@ -94,7 +94,7 @@ The APIs are:
 	- `addSessionToWishlist(SessionKey)` -- adds the session to the user's list of sessions they are interested in attending.
 	- `getSessionsInWishlist()` -- query for all the sessions in a conference that the user is interested in.
 
-## Task 3: Work on indexes and queries
+## Work on indexes and queries
 1. Create indexes
 2. Come up with 2 additional queries:
 	-  `ProfileForms` is added for the following two methods.
@@ -114,7 +114,7 @@ p = p.order(Session.startTime)
 result = [session for session in p if session.startTime < time(19)]
 ```
 
-## Task 4: Add a Task
+## Add a Task
 When a new session is added, A task is added to the default push queue for each speaker in the new session's speaker list. The task runs the `CheckFeaturedSpeakerHandler` (main.py) which updates the memcache key for a particular conference with a new speaker name (string) if the speaker already has other sessions in the datastore of the same conference.<br/>
 1.  Adding a one-time task to check the featured speaker into `taskqueue` when the new session creating.<br/>
 2. `getFeaturedSpeaker()` method is used to get the featured speaker.<br/>
